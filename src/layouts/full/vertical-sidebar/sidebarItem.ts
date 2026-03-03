@@ -188,7 +188,7 @@ const sidebarItem: menu[] = [
         icon: SettingsIcon,
         to: '/settings/company',
         external: false,
-        roles: ['Admin', 'Direction']
+        roles: ['Admin', 'Direction', 'Controle', 'Agent']
     },
     {
         title: 'Gestion des Pôles',
