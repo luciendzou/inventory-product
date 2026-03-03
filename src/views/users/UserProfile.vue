@@ -137,7 +137,7 @@ const fetchUserProfile = async () => {
     try {
         const response = await axiosInstance.get('/user');
         const data = response.data;
-        console.log("Données utilisateur récupérées:", data);
+        console.log("Données utilisateur récupérées avec succès:", data);
 
         userModel.value = {
             id_users: data.id_users,
