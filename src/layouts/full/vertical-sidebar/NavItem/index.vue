@@ -1,11 +1,18 @@
 <script setup>
 import Icon from '../Icon.vue';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps({ item: Object, level: Number });
+const { t } = useI18n();
 
 const normalizedTo = (value) => {
     if (typeof value !== 'string') return value;
     return value.trim();
+};
+
+const getLabel = (item) => {
+    if (item?.i18nKey) return t(item.i18nKey);
+    return item?.title || '';
 };
 </script>
 
@@ -25,7 +32,7 @@ const normalizedTo = (value) => {
             <Icon :item="item.icon" :level="level" />
         </template>
         <v-list-item-title
-            >{{ item.title }}
+            >{{ getLabel(item) }}
             <span v-if="item.children">
                 <span v-if="item.chip" class="ps-3">
                     <v-chip

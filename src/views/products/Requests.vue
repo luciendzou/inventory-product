@@ -506,7 +506,7 @@ onMounted(async () => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Liste des demandes">
+            <UiParentCard title="Liste des demandes" style="padding: 2rem;">
                 <template v-slot:action>
                     <v-btn color="primary" prepend-icon="mdi-plus" @click="openRequestDrawer">Faire une demande</v-btn>
                 </template>

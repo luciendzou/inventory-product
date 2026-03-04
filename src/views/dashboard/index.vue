@@ -6,14 +6,40 @@ import YearlyBreakup from '@/components/dashboard/YearlyBreakup.vue';
 import MonthlyEarning from '@/components/dashboard/MonthlyEarnings.vue';
 import RecentTransaction from '@/components/dashboard/RecentTransaction.vue';
 import axiosInstance from '@/utils/axios';
+import { useToast } from 'vue-toastification';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const toast = useToast();
+const { t } = useI18n();
 const loading = ref(true);
 const roleName = ref('');
+const currentUser = ref<any>(null);
+const users = ref<any[]>([]);
 const demandes = ref<any[]>([]);
 const sorties = ref<any[]>([]);
+const rolloverLoading = ref(false);
+const rolloverDone = ref(false);
 
-const isAgent = computed(() => roleName.value.toLowerCase().includes('agent'));
+const normalizedRole = computed(() => roleName.value.toLowerCase());
+const isAgent = computed(() => normalizedRole.value.includes('agent'));
+const shouldShowGlobalDashboard = computed(() => {
+    if (isAgent.value) return false;
+    return ['direction', 'contrôle', 'controle', 'admin', 'agence'].some((r) => normalizedRole.value.includes(r));
+});
+
+const rolloverTargetYear = computed(() => new Date().getFullYear());
+const isRolloverWindowOpen = computed(() => {
+    const now = new Date();
+    return now.getMonth() === 0 && now.getDate() <= 30;
+});
+const rolloverStorageKey = computed(() => {
+    const scope = currentUser.value?.id_entreprise || 'default';
+    return `stock-year-rollover:${scope}:${rolloverTargetYear.value}`;
+});
+const canShowRolloverButton = computed(() => {
+    return shouldShowGlobalDashboard.value && isRolloverWindowOpen.value && !rolloverDone.value;
+});
 
 const normalizeStatus = (value: string) => {
     return (value || '')
@@ -62,7 +88,7 @@ const recentAgentRows = computed(() => {
 });
 
 const getProductName = (item: any) => {
-    return item?.product?.nom || 'Produit';
+    return item?.product?.nom || t('common.product');
 };
 
 const statusChartSeries = computed(() => {
@@ -70,7 +96,7 @@ const statusChartSeries = computed(() => {
 });
 
 const statusChartOptions = computed(() => ({
-    labels: ['Recus', 'Refuses', 'En attente'],
+    labels: [t('dashboard.receivedProducts'), t('dashboard.refusedProducts'), t('dashboard.pending')],
     colors: ['#4CAF50', '#F44336', '#FF9800'],
     legend: { position: 'bottom' },
     dataLabels: { enabled: true }
@@ -113,8 +139,8 @@ const monthlyChartData = computed(() => {
     return {
         categories: months.map((m) => m.label),
         series: [
-            { name: 'Demandes', data: demandesCount },
-            { name: 'Receptions', data: recuesCount }
+            { name: t('dashboard.myRequests'), data: demandesCount },
+            { name: t('dashboard.receivedProducts'), data: recuesCount }
         ]
     };
 });
@@ -156,6 +182,7 @@ const topProductsOptions = computed(() => ({
 
 const fetchRole = async () => {
     const { data: user } = await axiosInstance.get('/user');
+    currentUser.value = user;
     const profileId = user.id_profil || user.profil_id || user.profil?.id_profil;
 
     if (user.profil?.nom) {
@@ -170,9 +197,39 @@ const fetchRole = async () => {
     }
 };
 
+const getScopedDemandes = async () => {
+    if (!currentUser.value) return [];
+
+    if (isAgent.value) {
+        const { data } = await axiosInstance.get('/demandes/me');
+        return Array.isArray(data) ? data : [];
+    }
+
+    const [demandesRes, usersRes] = await Promise.all([
+        axiosInstance.get('/demandes'),
+        axiosInstance.get('/users')
+    ]);
+
+    users.value = Array.isArray(usersRes.data) ? usersRes.data : [];
+    const allDemandes = Array.isArray(demandesRes.data) ? demandesRes.data : [];
+
+    const userAgence = currentUser.value?.agence;
+    const userPoleId = currentUser.value?.id_pole || currentUser.value?.pole_id || currentUser.value?.pole?.id_pole;
+
+    if (!userAgence && !userPoleId) return allDemandes;
+
+    return allDemandes.filter((req: any) => {
+        const requester = users.value.find((u: any) => u.id_users === req.id_users);
+        if (!requester) return false;
+        const requesterPoleId = requester.id_pole || requester.pole_id || requester.pole?.id_pole;
+        const matchAgence = userAgence && requester.agence === userAgence;
+        const matchPole = userPoleId && requesterPoleId === userPoleId;
+        return matchAgence || matchPole;
+    });
+};
+
 const fetchAgentData = async () => {
-    const { data } = await axiosInstance.get('/demandes/me');
-    demandes.value = Array.isArray(data) ? data : [];
+    demandes.value = await getScopedDemandes();
 
     const sortiesParDemande = await Promise.all(
         demandes.value.map(async (d: any) => {
@@ -193,11 +250,52 @@ const fetchAgentData = async () => {
     sorties.value = sortiesParDemande.reduce((acc: any[], items: any[]) => acc.concat(items), []);
 };
 
+const hydrateRolloverState = () => {
+    try {
+        rolloverDone.value = localStorage.getItem(rolloverStorageKey.value) === '1';
+    } catch {
+        rolloverDone.value = false;
+    }
+};
+
+const saveRolloverState = () => {
+    try {
+        localStorage.setItem(rolloverStorageKey.value, '1');
+    } catch {
+        // no-op
+    }
+};
+
+const runYearRollover = async () => {
+    if (!canShowRolloverButton.value || rolloverLoading.value) return;
+
+    rolloverLoading.value = true;
+    try {
+        const payload = { year: rolloverTargetYear.value };
+        const { data } = await axiosInstance.post('/stock/year-rollover', payload);
+        rolloverDone.value = true;
+        saveRolloverState();
+        toast.success(data?.message || t('toasts.rolloverDone'));
+    } catch (error: any) {
+        const status = error?.response?.status;
+        if (status === 409) {
+            rolloverDone.value = true;
+            saveRolloverState();
+            toast.info(error?.response?.data?.message || t('toasts.rolloverAlreadyDone'));
+        } else {
+            toast.error(error?.response?.data?.message || t('toasts.rolloverError'));
+        }
+    } finally {
+        rolloverLoading.value = false;
+    }
+};
+
 const initDashboard = async () => {
     loading.value = true;
     try {
         await fetchRole();
-        if (isAgent.value) {
+        hydrateRolloverState();
+        if (!shouldShowGlobalDashboard.value) {
             await fetchAgentData();
         }
     } catch (error) {
@@ -215,7 +313,18 @@ onMounted(() => {
 <template>
     <v-row>
         <v-col cols="12">
-            <v-row v-if="!isAgent">
+            <v-row v-if="shouldShowGlobalDashboard">
+                <v-col cols="12" v-if="canShowRolloverButton">
+                    <v-alert type="warning" variant="tonal" class="d-flex align-center justify-space-between">
+                        <div>
+                            <div class="font-weight-bold">{{ $t('dashboard.rolloverTitle') }}</div>
+                            <div class="text-body-2">{{ $t('dashboard.rolloverHint', { year: rolloverTargetYear }) }}</div>
+                        </div>
+                        <v-btn color="warning" variant="elevated" :loading="rolloverLoading" @click="runYearRollover">
+                            {{ $t('dashboard.rolloverAction') }}
+                        </v-btn>
+                    </v-alert>
+                </v-col>
                 <v-col cols="12" lg="8">
                     <SalesOverview />
                 </v-col>
@@ -235,25 +344,25 @@ onMounted(() => {
             <v-row v-else>
                 <v-col cols="12" md="3">
                     <v-card variant="outlined" class="pa-4">
-                        <div class="text-caption text-medium-emphasis">Mes demandes</div>
+                        <div class="text-caption text-medium-emphasis">{{ isAgent ? $t('dashboard.myRequests') : $t('dashboard.scopeRequests') }}</div>
                         <div class="text-h4 font-weight-bold">{{ agentStats.demandes }}</div>
                     </v-card>
                 </v-col>
                 <v-col cols="12" md="3">
                     <v-card variant="outlined" class="pa-4">
-                        <div class="text-caption text-medium-emphasis">Produits recus</div>
+                        <div class="text-caption text-medium-emphasis">{{ $t('dashboard.receivedProducts') }}</div>
                         <div class="text-h4 font-weight-bold text-success">{{ agentStats.received }}</div>
                     </v-card>
                 </v-col>
                 <v-col cols="12" md="3">
                     <v-card variant="outlined" class="pa-4">
-                        <div class="text-caption text-medium-emphasis">Produits refuses</div>
+                        <div class="text-caption text-medium-emphasis">{{ $t('dashboard.refusedProducts') }}</div>
                         <div class="text-h4 font-weight-bold text-error">{{ agentStats.refused }}</div>
                     </v-card>
                 </v-col>
                 <v-col cols="12" md="3">
                     <v-card variant="outlined" class="pa-4">
-                        <div class="text-caption text-medium-emphasis">Quantite recue</div>
+                        <div class="text-caption text-medium-emphasis">{{ $t('dashboard.receivedQty') }}</div>
                         <div class="text-h4 font-weight-bold text-primary">{{ agentStats.totalQtyReceived }}</div>
                     </v-card>
                 </v-col>
@@ -261,7 +370,7 @@ onMounted(() => {
                 <v-col cols="12" md="4">
                     <v-card elevation="10">
                         <v-card-item>
-                            <v-card-title class="text-h6">Statut des sorties</v-card-title>
+                            <v-card-title class="text-h6">{{ $t('dashboard.exitStatus') }}</v-card-title>
                             <apexchart v-if="!loading" type="donut" height="260" :options="statusChartOptions" :series="statusChartSeries" />
                         </v-card-item>
                     </v-card>
@@ -270,7 +379,7 @@ onMounted(() => {
                 <v-col cols="12" md="8">
                     <v-card elevation="10">
                         <v-card-item>
-                            <v-card-title class="text-h6">Evolution mensuelle (6 mois)</v-card-title>
+                            <v-card-title class="text-h6">{{ $t('dashboard.monthlyEvolution') }}</v-card-title>
                             <apexchart v-if="!loading" type="bar" height="260" :options="monthlyChartOptions" :series="monthlyChartData.series" />
                         </v-card-item>
                     </v-card>
@@ -279,7 +388,7 @@ onMounted(() => {
                 <v-col cols="12">
                     <v-card elevation="10">
                         <v-card-item>
-                            <v-card-title class="text-h6">Top produits (quantites)</v-card-title>
+                            <v-card-title class="text-h6">{{ $t('dashboard.topProducts') }}</v-card-title>
                             <apexchart
                                 v-if="!loading"
                                 type="bar"
@@ -295,19 +404,19 @@ onMounted(() => {
                     <v-card elevation="10">
                         <v-card-item>
                             <div class="d-flex justify-space-between align-center mb-4">
-                                <v-card-title class="text-h5">Mes derniers mouvements</v-card-title>
-                                <v-btn color="primary" variant="outlined" @click="router.push('/users/agent-report')">
-                                    Voir le rapport complet
+                                <v-card-title class="text-h5">{{ isAgent ? $t('dashboard.myLatestMoves') : $t('dashboard.scopeLatestMoves') }}</v-card-title>
+                                <v-btn color="primary" variant="outlined" @click="router.push(isAgent ? '/users/agent-report' : '/products/global-history')">
+                                    {{ $t('common.details') }}
                                 </v-btn>
                             </div>
 
                             <v-table :loading="loading">
                                 <thead>
                                     <tr>
-                                        <th class="text-left">Date</th>
-                                        <th class="text-left">Produit</th>
-                                        <th class="text-left">Quantite</th>
-                                        <th class="text-left">Statut</th>
+                                        <th class="text-left">{{ $t('common.date') }}</th>
+                                        <th class="text-left">{{ $t('common.product') }}</th>
+                                        <th class="text-left">{{ $t('common.quantity') }}</th>
+                                        <th class="text-left">{{ $t('common.status') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -325,7 +434,7 @@ onMounted(() => {
                                         </td>
                                     </tr>
                                     <tr v-if="recentAgentRows.length === 0 && !loading">
-                                        <td colspan="4" class="text-center text-medium-emphasis py-4">Aucun mouvement disponible.</td>
+                                        <td colspan="4" class="text-center text-medium-emphasis py-4">{{ $t('dashboard.noMove') }}</td>
                                     </tr>
                                 </tbody>
                             </v-table>

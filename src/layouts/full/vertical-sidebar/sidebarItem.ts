@@ -73,6 +73,7 @@ import {
 export interface menu {
     header?: string;
     title?: string;
+    i18nKey?: string;
     icon?: any;
     to?: string;
     chip?: string;
@@ -89,18 +90,20 @@ export interface menu {
 }
 
 const sidebarItem: menu[] = [
-    { header: 'Home' },
+    { header: 'Home', i18nKey: 'sidebar.header.home' },
     {
         title: 'Dashboard',
+        i18nKey: 'sidebar.dashboard',
         icon: LayoutDashboardIcon,
         to: '/',
         external: false,
         roles: ['Admin', 'Agent', 'Agence', 'Controle', 'Direction']
     },
 
-    { header: 'PRODUCTS' },
+    { header: 'PRODUCTS', i18nKey: 'sidebar.header.products' },
     {
         title: 'List Categories',
+        i18nKey: 'sidebar.listCategories',
         icon: Category2Icon,
         to: '/products/list-categories',
         external: false,
@@ -108,6 +111,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'List Products',
+        i18nKey: 'sidebar.listProducts',
         icon: ListIcon,
         to: '/products/list-products',
         external: false,
@@ -115,15 +119,17 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Requests',
+        i18nKey: 'sidebar.requests',
         icon: ShoppingCartIcon,
         to: '/products/requests',
         external: false,
         roles: ['Admin', 'Agent', 'Agence', 'Controle', 'Direction']
     },
 
-    { header: 'Utilisateurs' },
+    { header: 'Utilisateurs', i18nKey: 'sidebar.header.users' },
     {
         title: 'List Users',
+        i18nKey: 'sidebar.listUsers',
         icon: UserIcon,
         to: '/users/list-users',
         external: false,
@@ -131,6 +137,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Roles & Permissions',
+        i18nKey: 'sidebar.rolesPermissions',
         icon: UserShieldIcon,
         to: '/users/roles-permissions',
         external: false,
@@ -138,6 +145,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'My Profile',
+        i18nKey: 'sidebar.myProfile',
         icon: UserIcon,
         to: '/users/profile',
         external: false,
@@ -145,6 +153,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Rapport Utilisateurs',
+        i18nKey: 'sidebar.userReport',
         icon: ReportAnalyticsIcon,
         to: '/users/report',
         external: false,
@@ -152,9 +161,10 @@ const sidebarItem: menu[] = [
     },
     
 
-    { header: 'RAPPORTS', roles: ['Admin', 'Direction', 'Controle', 'Agence'] },
+    { header: 'RAPPORTS', i18nKey: 'sidebar.header.reports', roles: ['Admin', 'Direction', 'Controle', 'Agence'] },
     {
         title: 'Rapport Agent',
+        i18nKey: 'sidebar.agentReport',
         icon: ReportAnalyticsIcon,
         to: '/users/agent-report',
         external: false,
@@ -162,6 +172,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Historique Global',
+        i18nKey: 'sidebar.globalHistory',
         icon: HistoryIcon,
         to: '/products/global-history',
         external: false,
@@ -169,6 +180,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Valorisation Stock',
+        i18nKey: 'sidebar.stockValuation',
         icon: ReportAnalyticsIcon,
         to: '/products/stock-valuation',
         external: false,
@@ -176,15 +188,17 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Etat Stock Periode',
+        i18nKey: 'sidebar.stockStatePeriod',
         icon: ReportAnalyticsIcon,
         to: '/products/stock-state-report',
         external: false,
         roles: ['Admin', 'Direction', 'Controle', 'Agence']
     },
     
-    { header: 'Extra' },
+    { header: 'Extra', i18nKey: 'sidebar.header.extra' },
     {
         title: 'Parameters',
+        i18nKey: 'sidebar.parameters',
         icon: SettingsIcon,
         to: '/settings/company',
         external: false,
@@ -192,6 +206,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Gestion des Pôles',
+        i18nKey: 'sidebar.polesManagement',
         icon: BoxModelIcon,
         to: '/settings/poles',
         external: false,
@@ -199,6 +214,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Gestion des Ordonnances',
+        i18nKey: 'sidebar.ordersManagement',
         icon:   FileTextIcon,
         to: '/settings/orders',
         external: false,
@@ -206,6 +222,7 @@ const sidebarItem: menu[] = [
     },
     {
         title: 'Notifications',
+        i18nKey: 'sidebar.notifications',
         icon: AlertCircleIcon,
         to: '/extra/notifications',
         external: false,

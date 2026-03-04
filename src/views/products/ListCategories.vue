@@ -199,7 +199,7 @@ const deleteCategory = async () => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Catégories de produits">
+            <UiParentCard title="Catégories de produits" style="padding: 2rem;">
                 <template v-slot:action>
                     <div class="d-flex ga-2">
                         <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printPage">Imprimer / PDF</v-btn>

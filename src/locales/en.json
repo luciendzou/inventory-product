@@ -1,0 +1,56 @@
+{
+  "common": {
+    "date": "Date",
+    "product": "Product",
+    "quantity": "Quantity",
+    "status": "Status",
+    "details": "View details"
+  },
+  "dashboard": {
+    "rolloverTitle": "Annual stock rollover",
+    "rolloverHint": "Available only from January 1 to January 30. Target year: {year}.",
+    "rolloverAction": "Run rollover",
+    "myRequests": "My requests",
+    "scopeRequests": "Requests in my scope",
+    "receivedProducts": "Received products",
+    "refusedProducts": "Refused products",
+    "pending": "Pending",
+    "receivedQty": "Received quantity",
+    "exitStatus": "Exit status",
+    "monthlyEvolution": "Monthly trend (6 months)",
+    "topProducts": "Top products (quantities)",
+    "myLatestMoves": "My latest movements",
+    "scopeLatestMoves": "Latest movements in my scope",
+    "noMove": "No movement available."
+  },
+  "toasts": {
+    "rolloverDone": "Stock rollover completed.",
+    "rolloverAlreadyDone": "Rollover already completed for this year.",
+    "rolloverError": "Error while running stock rollover."
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "listCategories": "List categories",
+    "listProducts": "List products",
+    "requests": "Requests",
+    "listUsers": "List users",
+    "rolesPermissions": "Roles & permissions",
+    "myProfile": "My profile",
+    "userReport": "Users report",
+    "agentReport": "Agent report",
+    "globalHistory": "Global history",
+    "stockValuation": "Stock valuation",
+    "stockStatePeriod": "Stock state by period",
+    "parameters": "Parameters",
+    "polesManagement": "Poles management",
+    "ordersManagement": "Orders management",
+    "notifications": "Notifications",
+    "header": {
+      "home": "Home",
+      "products": "Products",
+      "users": "Users",
+      "reports": "Reports",
+      "extra": "Extra"
+    }
+  }
+}

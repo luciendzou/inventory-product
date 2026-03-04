@@ -342,7 +342,7 @@ onMounted(async () => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Gestion des Utilisateurs">
+            <UiParentCard title="Gestion des Utilisateurs" style="padding: 2rem;">
                 <template v-slot:action>
                     <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDrawer">Ajouter un utilisateur</v-btn>
                 </template>

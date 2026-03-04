@@ -1,8 +1,15 @@
 <script setup>
 import NavItem from '../NavItem/index.vue';
 import Icon from '../Icon.vue';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps({ item: Object, level: Number });
+const { t } = useI18n();
+
+const getLabel = (item) => {
+    if (item?.i18nKey) return t(item.i18nKey);
+    return item?.title || '';
+};
 </script>
 
 <template>
@@ -20,7 +27,7 @@ const props = defineProps({ item: Object, level: Number });
                     <Icon :item="item.icon" :level="level" />
                 </template>
                 <!---Title  -->
-                <v-list-item-title class="mr-auto">{{ item.title}}</v-list-item-title>
+                <v-list-item-title class="mr-auto">{{ getLabel(item) }}</v-list-item-title>
                 <!---If Caption-->
                 <v-list-item-subtitle v-if="item.subCaption" class="text-caption mt-n1 hide-menu">
                     {{ item.subCaption }}

@@ -5,13 +5,15 @@ import BaseBreadcrumb from '@/components/shared/BaseBreadcrumb.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import axiosInstance from '@/utils/axios';
 import { useToast } from 'vue-toastification';
+import { useI18n } from 'vue-i18n';
 
 const toast = useToast();
 const theme = useTheme();
+const { locale } = useI18n();
 
 const THEME_KEY = 'appTheme';
 const LOCALE_KEY = 'appLocale';
-const STOCK_ROLLOVER_ENDPOINT = import.meta.env.VITE_STOCK_ROLLOVER_ENDPOINT || '/stock/rollover-year';
+const STOCK_ROLLOVER_ENDPOINT = import.meta.env.VITE_STOCK_ROLLOVER_ENDPOINT || '/stock/year-rollover';
 
 const page = ref({ title: "Paramètres de l'entreprise" });
 const breadcrumbs = ref([
@@ -21,6 +23,7 @@ const breadcrumbs = ref([
 
 const loading = ref(false);
 const rollingStock = ref(false);
+const rolloverDone = ref(false);
 const savingPreferences = ref(false);
 const today = ref(new Date());
 
@@ -42,7 +45,7 @@ const currentUser = ref<any>(null);
 const profils = ref<any[]>([]);
 
 const selectedTheme = ref(localStorage.getItem(THEME_KEY) || (theme.global.name.value as string) || 'BlueTheme');
-const selectedLocale = ref(localStorage.getItem(LOCALE_KEY) || 'fr');
+const selectedLocale = ref(localStorage.getItem(LOCALE_KEY) || locale.value || 'fr');
 
 const normalizeText = (value: string) =>
     value
@@ -75,6 +78,7 @@ const normalizedRole = computed(() => normalizeText(currentRoleName.value || '')
 const isAdmin = computed(() => normalizedRole.value.includes('admin'));
 const isDirectionRole = computed(() => normalizedRole.value.includes('direction'));
 const isControle = computed(() => normalizedRole.value.includes('controle'));
+const isAgence = computed(() => normalizedRole.value.includes('agence'));
 const isAgent = computed(() => normalizedRole.value.includes('agent'));
 const isDirectionGeneraleAgency = computed(
     () => normalizedAgency.value.includes('direction generale')
@@ -82,14 +86,19 @@ const isDirectionGeneraleAgency = computed(
 const isAdminDirectionGenerale = computed(() => isAdmin.value && isDirectionGeneraleAgency.value);
 
 const canEditCompanySettings = computed(() => isDirectionRole.value || isAdminDirectionGenerale.value);
-const canShowStockRollover = computed(() => !canEditCompanySettings.value);
+const canShowStockRollover = computed(() => !isAgent.value && (isAdmin.value || isDirectionRole.value || isControle.value || isAgence.value));
 const canCustomizeAppearance = computed(
-    () => (isAdmin.value && !isAdminDirectionGenerale.value) || isControle.value || isAgent.value
+    () => (isAdmin.value && isAdminDirectionGenerale.value) || isControle.value || isAgent.value
 );
 
 const isStockRolloverWindowOpen = computed(() => today.value.getMonth() === 0 && today.value.getDate() <= 30);
-const sourceYear = computed(() => today.value.getFullYear() - 1);
 const targetYear = computed(() => today.value.getFullYear());
+const sourceYear = computed(() => targetYear.value - 1);
+const rolloverStorageKey = computed(() => {
+    const scope = currentUser.value?.id_entreprise || 'default';
+    return `stock-year-rollover:${scope}:${targetYear.value}`;
+});
+const canRunStockRollover = computed(() => isStockRolloverWindowOpen.value && !rolloverDone.value);
 
 const themeOptions = [
     { title: 'Clair', value: 'BlueTheme' },
@@ -114,6 +123,7 @@ const applyTheme = (themeName: string) => {
 };
 
 const applyLocale = (localeValue: string) => {
+    locale.value = localeValue;
     localStorage.setItem(LOCALE_KEY, localeValue);
     window.dispatchEvent(new Event('app-locale-changed'));
 };
@@ -204,7 +214,7 @@ const saveSettings = async () => {
 };
 
 const rolloverStockToNewYear = async () => {
-    if (!isStockRolloverWindowOpen.value) {
+    if (!canRunStockRollover.value) {
         toast.error("La bascule n'est autorisée que du 1er au 30 janvier.");
         return;
     }
@@ -212,13 +222,20 @@ const rolloverStockToNewYear = async () => {
     rollingStock.value = true;
     try {
         await axiosInstance.post(STOCK_ROLLOVER_ENDPOINT, {
-            from_year: sourceYear.value,
-            to_year: targetYear.value
+            year: targetYear.value
         });
+        rolloverDone.value = true;
+        localStorage.setItem(rolloverStorageKey.value, '1');
         toast.success(`Bascule de stock ${sourceYear.value} -> ${targetYear.value} effectuée.`);
     } catch (error: any) {
         console.error(error);
-        toast.error(error?.response?.data?.message || 'Erreur pendant la bascule de stock.');
+        if (error?.response?.status === 409) {
+            rolloverDone.value = true;
+            localStorage.setItem(rolloverStorageKey.value, '1');
+            toast.info(error?.response?.data?.message || 'La bascule a deja ete effectuee.');
+        } else {
+            toast.error(error?.response?.data?.message || 'Erreur pendant la bascule de stock.');
+        }
     } finally {
         rollingStock.value = false;
     }
@@ -233,6 +250,7 @@ onMounted(async () => {
     applyLocale(selectedLocale.value);
     await fetchProfils();
     await fetchCompanySettings();
+    rolloverDone.value = localStorage.getItem(rolloverStorageKey.value) === '1';
 });
 </script>
 
@@ -241,7 +259,7 @@ onMounted(async () => {
     <v-row>
         <template v-if="canEditCompanySettings">
             <v-col cols="12" md="4">
-                <UiParentCard title="Logo de l'entreprise">
+                <UiParentCard title="Logo de l'entreprise" style="padding: 2rem;">
                     <div class="d-flex flex-column align-center pt-4">
                         <div class="mb-4 border border-dashed pa-4 rounded w-100 d-flex justify-center align-center bg-grey-lighten-5" style="height: 150px;">
                             <v-img v-if="companyModel.logo" :src="getImageUrl(companyModel.logo)" max-height="120" contain></v-img>
@@ -253,7 +271,7 @@ onMounted(async () => {
             </v-col>
 
             <v-col cols="12" md="8">
-                <UiParentCard title="Informations générales">
+                <UiParentCard title="Informations générales" style="padding: 2rem;">
                     <template v-slot:action>
                         <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printPage">Imprimer / PDF</v-btn>
                     </template>
@@ -284,15 +302,11 @@ onMounted(async () => {
             </v-col>
         </template>
 
-        <v-col cols="12" v-if="canShowStockRollover">
-            <UiParentCard title="Bascule annuelle du stock">
+        <v-col cols="12" v-if="canShowStockRollover && isStockRolloverWindowOpen && !rolloverDone">
+            <UiParentCard title="Bascule annuelle du stock" style="padding: 2rem;">
                 <v-alert type="info" variant="tonal" class="mb-4">
                     Cette opération permet de basculer le stock de l'année {{ sourceYear }} vers {{ targetYear }}.
                     Elle est autorisée uniquement du 1er au 30 janvier.
-                </v-alert>
-
-                <v-alert v-if="!isStockRolloverWindowOpen" type="warning" variant="tonal" class="mb-4">
-                    Fenêtre fermée: la bascule est possible seulement du 1er au 30 janvier.
                 </v-alert>
 
                 <div class="d-flex flex-wrap align-center ga-3">
@@ -301,7 +315,7 @@ onMounted(async () => {
                 </div>
 
                 <div class="d-flex justify-end mt-6">
-                    <v-btn color="primary" :loading="rollingStock" :disabled="!isStockRolloverWindowOpen" prepend-icon="mdi-swap-horizontal-bold" @click="rolloverStockToNewYear">
+                    <v-btn color="primary" :loading="rollingStock" :disabled="!canRunStockRollover" prepend-icon="mdi-swap-horizontal-bold" @click="rolloverStockToNewYear">
                         Basculer le stock vers {{ targetYear }}
                     </v-btn>
                 </div>
@@ -309,7 +323,7 @@ onMounted(async () => {
         </v-col>
 
         <v-col cols="12" md="6" v-if="canCustomizeAppearance">
-            <UiParentCard title="Personnalisation (thème et langue)">
+            <UiParentCard title="Personnalisation (thème et langue)" style="padding: 2rem;">
                 <v-row>
                     <v-col cols="12" md="6">
                         <v-label class="font-weight-medium mb-2">Thème</v-label>

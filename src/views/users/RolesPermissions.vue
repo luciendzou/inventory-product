@@ -43,7 +43,62 @@ const fetchProfils = async () => {
 };
 
 const printPage = () => {
-    window.print();
+    if (!profils.value.length) {
+        toast.warning('Aucun role a imprimer.');
+        return;
+    }
+
+    const escapeHtml = (value: string) => {
+        return (value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
+    const rowsHtml = profils.value
+        .map((item: Profil, idx: number) => `
+            <tr>
+                <td style="border:1px solid #d1d5db; padding:8px; width:60px;">${idx + 1}</td>
+                <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.nom || '-')}</td>
+                <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.description || '-')}</td>
+            </tr>
+        `)
+        .join('');
+
+    const content = `
+        <div style="font-family: Arial, sans-serif; color:#111827; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 16px; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px;">
+                <div>
+                    <div style="font-weight:700; font-size:18px;">Liste des Roles (Profils)</div>
+                    <div style="margin-top: 8px; font-size: 13px;"><strong>Total:</strong> ${profils.value.length}</div>
+                </div>
+                <div style="text-align:right; font-size:12px;">
+                    <div>Imprime le: ${new Date().toLocaleString()}</div>
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f3f4f6;">
+                        <th style="border:1px solid #d1d5db; padding:8px; width:60px;">#</th>
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:left;">Nom du Role</th>
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:left;">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    const printWindow = window.open('', '', 'height=900,width=1200');
+    if (!printWindow) return;
+    printWindow.document.write(`<html><head><title>Liste des Roles</title></head><body>${content}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 300);
 };
 
 onMounted(() => {
@@ -55,7 +110,7 @@ onMounted(() => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Liste des Roles (Profils)">
+            <UiParentCard title="Liste des Roles (Profils)" style="padding: 2rem;">
                 <template v-slot:action>
                     <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printPage">Imprimer / PDF</v-btn>
                 </template>
@@ -83,4 +138,3 @@ onMounted(() => {
         </v-col>
     </v-row>
 </template>
-

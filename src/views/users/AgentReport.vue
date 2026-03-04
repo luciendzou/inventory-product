@@ -156,7 +156,7 @@ onMounted(() => {
         </v-col>
 
         <v-col cols="12">
-            <UiParentCard title="Détails des produits">
+            <UiParentCard title="Détails des produits" style="padding: 2rem;">
                 <template v-slot:action>
                     <div class="d-flex ga-2">
                         <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printPage">Imprimer / PDF</v-btn>

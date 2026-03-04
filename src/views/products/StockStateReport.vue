@@ -416,7 +416,7 @@ onMounted(() => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs" />
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Etat de Stock par Date / Intervalle / Annee">
+            <UiParentCard title="Etat de Stock par Date / Intervalle / Annee" style="padding: 2rem;">
                 <template #action>
                     <div class="d-flex ga-2">
                         <v-btn color="success" variant="outlined" prepend-icon="mdi-file-excel" @click="exportExcel">Exporter Excel</v-btn>

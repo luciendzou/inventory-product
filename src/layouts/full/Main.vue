@@ -11,18 +11,31 @@ import {
     SunIcon, // Icône pour le thème clair
     MoonIcon, // Icône pour le thème sombre
     LanguageIcon, // Icône pour la langue
-    ShoppingCartIcon // Icône pour le panier
 } from 'vue-tabler-icons';
 // dropdown imports
-import NotificationDD from './vertical-header/NotificationDD.vue';
 import ProfileDD from './vertical-header/ProfileDD.vue';
 import NavCollapse from './vertical-sidebar/NavCollapse/NavCollapse.vue';
 import axiosInstance from '@/utils/axios';
+import { useI18n } from 'vue-i18n';
 
 const sidebarMenu = shallowRef(sidebarItems);
 
 const { mdAndDown } = useDisplay(); // Destructuration pour mdAndDown
 const sDrawer = ref(true);
+const currentUserName = ref('');
+const currentUserDisplayName = computed(() => {
+    const parts = (currentUserName.value || '').trim().split(/\s+/).filter(Boolean);
+    return parts.slice(0, 2).join(' ');
+});
+const { locale } = useI18n();
+const currentLocaleLabel = computed(() => locale.value.toUpperCase());
+
+const toggleLanguage = () => {
+    const next = locale.value === 'fr' ? 'en' : 'fr';
+    locale.value = next;
+    localStorage.setItem('appLocale', next);
+    window.dispatchEvent(new Event('app-locale-changed'));
+};
 
 onMounted(async () => {
     sDrawer.value = !mdAndDown.value; // hide on mobile, show on desktop
@@ -30,6 +43,7 @@ onMounted(async () => {
     try {
         // Récupération de l'utilisateur et de son rôle
         const { data: user } = await axiosInstance.get('/user');
+        currentUserName.value = user?.name || user?.email || '';
         let roleName = '';
 
         // Logique robuste pour trouver le nom du rôle
@@ -105,11 +119,6 @@ const toggleTheme = () => {
             </div>
             <!-- Partie droite de l'en-tête -->
             <div>
-                <!-- Upgrade button -->
-                <v-btn class="mr-2 bg-primary"
-                    href="https://adminmart.com/product/modernize-vuetify-vue-admin-dashboard/?ref=56#product-demo-section"
-                    target="_blank">Get Premium Version</v-btn>
-                
                 <!-- Bouton de bascule de thème -->
                 <v-btn icon variant="text" class="custom-hover-primary ml-0 ml-md-5 text-muted" @click="toggleTheme">
                     <SunIcon v-if="isDarkTheme" stroke-width="1.5" size="22" />
@@ -117,17 +126,14 @@ const toggleTheme = () => {
                 </v-btn>
 
                 <!-- Bouton de langue -->
-                <v-btn icon variant="text" class="custom-hover-primary ml-0 ml-md-5 text-muted">
+                <v-btn icon variant="text" class="custom-hover-primary ml-0 ml-md-5 text-muted" @click="toggleLanguage">
                     <LanguageIcon stroke-width="1.5" size="22" />
                 </v-btn>
+                <span class="text-caption text-medium-emphasis">{{ currentLocaleLabel }}</span>
 
-                <!-- Bouton de panier -->
-                <v-btn icon variant="text" class="custom-hover-primary ml-0 ml-md-5 text-muted">
-                    <ShoppingCartIcon stroke-width="1.5" size="22" />
-                </v-btn>
-
-                <!-- Notification -->
-                <NotificationDD />
+                <span class="ml-3 text-subtitle-2 text-medium-emphasis" v-if="currentUserDisplayName">
+                    {{ currentUserDisplayName }}
+                </span>
                 <!-- User Profile -->
                 <ProfileDD />
             </div>

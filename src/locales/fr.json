@@ -1,0 +1,56 @@
+{
+  "common": {
+    "date": "Date",
+    "product": "Produit",
+    "quantity": "Quantite",
+    "status": "Statut",
+    "details": "Voir le detail"
+  },
+  "dashboard": {
+    "rolloverTitle": "Bascule de stock annuelle",
+    "rolloverHint": "Disponible du 1er au 30 janvier. Annee cible: {year}.",
+    "rolloverAction": "Basculer le stock",
+    "myRequests": "Mes demandes",
+    "scopeRequests": "Demandes de mon perimetre",
+    "receivedProducts": "Produits recus",
+    "refusedProducts": "Produits refuses",
+    "pending": "En attente",
+    "receivedQty": "Quantite recue",
+    "exitStatus": "Statut des sorties",
+    "monthlyEvolution": "Evolution mensuelle (6 mois)",
+    "topProducts": "Top produits (quantites)",
+    "myLatestMoves": "Mes derniers mouvements",
+    "scopeLatestMoves": "Derniers mouvements de mon perimetre",
+    "noMove": "Aucun mouvement disponible."
+  },
+  "toasts": {
+    "rolloverDone": "Bascule de stock effectuee.",
+    "rolloverAlreadyDone": "Bascule deja effectuee pour cette annee.",
+    "rolloverError": "Erreur lors de la bascule de stock."
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "listCategories": "Liste des categories",
+    "listProducts": "Liste des produits",
+    "requests": "Demandes",
+    "listUsers": "Liste des utilisateurs",
+    "rolesPermissions": "Roles et permissions",
+    "myProfile": "Mon profil",
+    "userReport": "Rapport utilisateurs",
+    "agentReport": "Rapport agent",
+    "globalHistory": "Historique global",
+    "stockValuation": "Valorisation stock",
+    "stockStatePeriod": "Etat stock periode",
+    "parameters": "Parametres",
+    "polesManagement": "Gestion des poles",
+    "ordersManagement": "Gestion des ordonnances",
+    "notifications": "Notifications",
+    "header": {
+      "home": "Accueil",
+      "products": "Produits",
+      "users": "Utilisateurs",
+      "reports": "Rapports",
+      "extra": "Extra"
+    }
+  }
+}

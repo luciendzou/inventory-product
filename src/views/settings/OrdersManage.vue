@@ -293,6 +293,70 @@ const printOrder = (item: Ordonance) => {
     setTimeout(() => printWindow.print(), 300);
 };
 
+const printOrdersList = () => {
+    const rows = filteredOrders.value;
+    if (!rows.length) {
+        toast.warning('Aucune ordonnance à imprimer.');
+        return;
+    }
+
+    const logoUrl = company.value?.logo ? getImageUrl(company.value.logo) : '';
+
+    const rowsHtml = rows
+        .map((item) => {
+            return `
+                <tr>
+                    <td style="border:1px solid #d1d5db; padding:8px;">${item.reference_op || '-'}</td>
+                    <td style="border:1px solid #d1d5db; padding:8px;">${item.date ? new Date(item.date).toLocaleDateString() : '-'}</td>
+                    <td style="border:1px solid #d1d5db; padding:8px;">${item.creancier || '-'}</td>
+                    <td style="border:1px solid #d1d5db; padding:8px; text-align:right;">${formatCurrency(item.montant_brut)}</td>
+                    <td style="border:1px solid #d1d5db; padding:8px; text-align:right;">${formatCurrency(item.nap)}</td>
+                    <td style="border:1px solid #d1d5db; padding:8px;">${getStatusLabel(item.status)}</td>
+                </tr>
+            `;
+        })
+        .join('');
+
+    const content = `
+        <div style="font-family: Arial, sans-serif; color:#111827; padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; border-bottom:2px solid #e5e7eb; padding-bottom:12px;">
+                <div>
+                    ${logoUrl ? `<img src="${logoUrl}" style="max-height:70px; max-width:180px;" />` : ''}
+                    <div style="margin-top:8px; font-size:13px;"><strong>Liste des ordonnances</strong></div>
+                </div>
+                <div style="text-align:right; font-size:12px;">
+                    <div>Imprimé le: ${new Date().toLocaleString()}</div>
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f3f4f6;">
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:left;">Référence</th>
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:left;">Date</th>
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:left;">Créancier</th>
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:right;">Montant brut</th>
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:right;">NAP</th>
+                        <th style="border:1px solid #d1d5db; padding:8px; text-align:left;">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    const printWindow = window.open('', '', 'height=900,width=1200');
+    if (!printWindow) {
+        toast.error("Impossible d'ouvrir la fenêtre d'impression.");
+        return;
+    }
+    printWindow.document.write(`<html><head><title>Liste des ordonnances</title></head><body>${content}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 300);
+};
+
 onMounted(async () => {
     await fetchCurrentUser();
     await fetchOrders();
@@ -303,9 +367,12 @@ onMounted(async () => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs" />
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Gestion des Ordonnances">
+            <UiParentCard title="Gestion des Ordonnances" style="padding: 2rem;">
                 <template #action>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDrawer">Nouvelle ordonnance</v-btn>
+                    <div class="d-flex ga-2">
+                        <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printOrdersList">Imprimer / PDF</v-btn>
+                        <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDrawer">Nouvelle ordonnance</v-btn>
+                    </div>
                 </template>
 
                 <v-text-field

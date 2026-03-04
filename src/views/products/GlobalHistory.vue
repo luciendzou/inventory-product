@@ -555,7 +555,7 @@ onMounted(async () => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Mouvements de stock">
+            <UiParentCard title="Mouvements de stock" style="padding: 2rem;">
                 <template v-slot:action>
                     <div class="d-flex gap-2 align-center">
                         <v-btn color="success" variant="outlined" prepend-icon="mdi-file-excel" @click="exportToExcel">Exporter Excel</v-btn>

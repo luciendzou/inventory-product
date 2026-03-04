@@ -293,7 +293,7 @@ onMounted(() => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs" />
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Rapport des Demandes Utilisateurs">
+            <UiParentCard title="Rapport des Demandes Utilisateurs" style="padding: 2rem;">
                 <template #action>
                     <div class="d-flex ga-2">
                         <v-btn color="secondary" variant="outlined" prepend-icon="mdi-file-excel" @click="exportExcel">Exporter Excel</v-btn>
@@ -343,7 +343,7 @@ onMounted(() => {
         </v-col>
 
         <v-col cols="12" md="6">
-            <UiParentCard title="Utilisateurs par Rôle">
+            <UiParentCard title="Utilisateurs par Rôle" style="padding: 2rem;">
                 <v-table :loading="loading">
                     <thead>
                         <tr>
@@ -365,7 +365,7 @@ onMounted(() => {
         </v-col>
 
         <v-col cols="12" md="6">
-            <UiParentCard title="Propositions et Indicateurs Complémentaires">
+            <UiParentCard title="Propositions et Indicateurs Complémentaires" style="padding: 2rem;">
                 <v-list density="compact">
                     <v-list-item>
                         <v-list-item-title><strong>Taux d'approbation global:</strong> {{ approvalRate }}%</v-list-item-title>

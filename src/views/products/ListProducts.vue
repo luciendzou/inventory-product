@@ -906,7 +906,10 @@ const exportToExcel = () => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Produits en stock">
+            <UiParentCard title="Produits en stock" sub-title="Liste complète des produits disponibles dans l'inventaire" :loading="loading" :empty-state="{
+                title: 'Aucun produit trouvé',
+                subtitle: 'Essayez de modifier vos critères de recherche'
+            }" style="padding: 2rem;">
                 <template v-slot:action>
                     <div class="d-flex ga-2">
                         <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printPage">Imprimer / PDF</v-btn>
@@ -1126,7 +1129,7 @@ const exportToExcel = () => {
             <v-card>
                 <v-card-title class="text-h5">Confirmer la suppression</v-card-title>
                 <v-card-text>
-                    èŠtes-vous sè»r de vouloir supprimer le produit "<strong>{{ productToDelete?.nom }}</strong>" ? Cette action est irréversible.
+                    Êtes-vous sûr de vouloir supprimer le produit "<strong>{{ productToDelete?.nom }}</strong>" ? Cette action est irréversible.
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>

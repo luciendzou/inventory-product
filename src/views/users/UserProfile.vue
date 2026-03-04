@@ -251,7 +251,9 @@ const saveProfile = async () => {
 const getImageUrl = (path: string | null) => {
     if (!path) return '';
     if (path.startsWith('http') || path.startsWith('data:')) return path;
-    return `${import.meta.env.VITE_API_URL || 'https://api.inventory.cremin-cam.org'}${path}`;
+    const apiBase = String(import.meta.env.VITE_API_URL || 'https://api.inventory.cremin-cam.org/api').replace(/\/+$/, '');
+    const cleanedPath = `/${String(path).replace(/^\/+/, '')}`;
+    return `${apiBase}${cleanedPath}`;
 };
 
 const printPage = () => {
@@ -276,10 +278,10 @@ onUnmounted(() => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12" md="4">
-            <UiParentCard title="Photo de profil">
+            <UiParentCard title="Photo de profil" style="padding: 2rem;">
                 <div class="d-flex flex-column align-center pt-4">
-                    <v-avatar size="120" color="primary" variant="tonal" class="mb-6">
-                        <v-img v-if="userModel.link_img" :src="getImageUrl(userModel.link_img)" cover></v-img>
+                    <v-avatar size="130" color="primary" variant="tonal" class="mb-6 profile-avatar">
+                        <v-img v-if="userModel.link_img" :src="getImageUrl(userModel.link_img)" class="profile-avatar-img" contain></v-img>
                         <v-icon v-else size="60">mdi-account</v-icon>
                     </v-avatar>
                     
@@ -288,10 +290,10 @@ onUnmounted(() => {
                 </div>
             </UiParentCard>
             
-            <UiParentCard title="Signature" class="mt-6">
+            <UiParentCard title="Signature" class="mt-6" style="padding: 2rem;">
                 <div class="d-flex flex-column align-center pt-2">
                     <div class="mb-4 border border-dashed pa-4 rounded w-100 d-flex justify-center align-center bg-grey-lighten-5" style="height: 100px;">
-                        <v-img v-if="userModel.signature" :src="getImageUrl(userModel.signature)" max-height="80" contain></v-img>
+                        <v-img v-if="userModel.signature" :src="getImageUrl(userModel.signature)" class="signature-preview" contain></v-img>
                         <div v-else class="text-medium-emphasis font-italic text-caption">Aucune signature</div>
                     </div>
 
@@ -317,7 +319,7 @@ onUnmounted(() => {
         </v-col>
         
         <v-col cols="12" md="8">
-            <UiParentCard title="Informations personnelles">
+            <UiParentCard title="Informations personnelles" style="padding: 2rem;">
                 <template v-slot:action>
                     <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printPage">Imprimer / PDF</v-btn>
                 </template>
@@ -349,6 +351,23 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.profile-avatar {
+    border: 1px solid #e5e7eb;
+}
+
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #f8fafc;
+}
+
+.signature-preview {
+    width: 100%;
+    height: 90px;
+    object-fit: contain;
+}
+
 .signature-canvas {
     width: 100%;
     height: 150px;

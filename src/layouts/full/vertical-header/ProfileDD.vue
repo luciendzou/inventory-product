@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { UserIcon } from 'vue-tabler-icons';
+import { UserIcon, LockIcon } from 'vue-tabler-icons';
 import axiosInstance from '@/utils/axios';
 import { useToast } from 'vue-toastification';
 
@@ -43,6 +43,12 @@ const logout = async () => {
                         <UserIcon stroke-width="1.5" size="20" />
                     </template>
                     <v-list-item-title class="pl-4 text-body-1">Mon Profil</v-list-item-title>
+                </v-list-item>
+                <v-list-item value="item2" color="primary" to="/users/change-password">
+                    <template v-slot:prepend>
+                        <LockIcon stroke-width="1.5" size="20" />
+                    </template>
+                    <v-list-item-title class="pl-4 text-body-1">Modifier le mot de passe</v-list-item-title>
                 </v-list-item>
             </v-list>
             <div class="pt-4 pb-4 px-5 text-center">

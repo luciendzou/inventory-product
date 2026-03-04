@@ -124,7 +124,7 @@ onMounted(() => {
 
     <v-row v-else-if="product">
         <v-col cols="12" md="8">
-            <UiParentCard title="Fiche Produit">
+            <UiParentCard title="Fiche Produit" :sub-title="`Détails et historique des mouvements pour ${product.nom}`" style="padding: 2rem;">
                 <template v-slot:action>
                     <v-btn color="secondary" variant="outlined" prepend-icon="mdi-printer" @click="printPage">Imprimer / PDF</v-btn>
                 </template>

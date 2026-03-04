@@ -412,7 +412,7 @@ onMounted(async () => {
     <BaseBreadcrumb :title="page.title" :breadcrumbs="breadcrumbs"></BaseBreadcrumb>
     <v-row>
         <v-col cols="12">
-            <UiParentCard title="Tableau de bord des stocks">
+            <UiParentCard title="Tableau de bord des stocks" style="padding: 2rem;">
                 <template v-slot:action>
                     <div class="d-flex ga-2">
                         <v-select

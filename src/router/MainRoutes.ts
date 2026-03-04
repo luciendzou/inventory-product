@@ -47,6 +47,11 @@ const MainRoutes = {
             component: () => import('@/views/users/UserProfile.vue')
         },
         {
+            name: 'ChangePassword',
+            path: '/users/change-password',
+            component: () => import('@/views/users/ChangePassword.vue')
+        },
+        {
             name: 'RapportUser',
             path: '/users/report',
             component: () => import('@/views/users/RapportUser.vue')
