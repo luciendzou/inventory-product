@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import BaseBreadcrumb from '@/components/shared/BaseBreadcrumb.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import axiosInstance from '@/utils/axios';
@@ -31,6 +31,21 @@ const normalizeNotification = (item: any) => {
         created_at: item.created_at || item.date || item.timestamp || new Date().toISOString(),
         is_read: Boolean(item.is_read ?? item.read ?? item.lu ?? false)
     };
+};
+
+const onUnreadCountEvent = (event: Event) => {
+    const customEvent = event as CustomEvent<{ count: number }>;
+    unreadCountApi.value = Number(customEvent.detail?.count) || 0;
+};
+
+const onNewNotificationEvent = (event: Event) => {
+    const customEvent = event as CustomEvent<{ notification: any }>;
+    const incoming = customEvent.detail?.notification;
+    if (!incoming?.id) return;
+    const exists = notifications.value.some((n: any) => n.id === incoming.id);
+    if (exists) return;
+    notifications.value.unshift(normalizeNotification(incoming));
+    totalItems.value = Number(totalItems.value || 0) + 1;
 };
 
 const fetchUnreadCount = async () => {
@@ -216,7 +231,14 @@ watch(currentPage, () => {
 });
 
 onMounted(() => {
+    window.addEventListener('notifications:unread-count', onUnreadCountEvent as EventListener);
+    window.addEventListener('notifications:new', onNewNotificationEvent as EventListener);
     fetchNotifications();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('notifications:unread-count', onUnreadCountEvent as EventListener);
+    window.removeEventListener('notifications:new', onNewNotificationEvent as EventListener);
 });
 </script>
 

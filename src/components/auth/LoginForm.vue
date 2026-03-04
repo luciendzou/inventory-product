@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axiosInstance from '@/utils/axios';
 import { useToast } from 'vue-toastification';
+import { startRealtimeNotifications } from '@/utils/realtimeNotifications';
 
 const checkbox = ref(true);
 const valid = ref(true);
@@ -30,6 +31,8 @@ async function validate() {
 
         const { access_token, user } = loginResponse.data;
         localStorage.setItem('authToken', access_token);
+        localStorage.setItem('authUserId', user.id_users);
+        startRealtimeNotifications(user.id_users, access_token);
 
         // Vérifier si le forfait de l'entreprise est configuré
         try {

@@ -146,7 +146,28 @@ const fetchProfils = async () => {
 const fetchProducts = async () => {
     try {
         const response = await axiosInstance.get('/products');
-        products.value = response.data;
+        let data = Array.isArray(response.data) ? response.data : [];
+
+        const profileId = currentUser.value?.id_profil || currentUser.value?.profil_id || currentUser.value?.profil?.id_profil;
+        const userProfile = profils.value.find((p) => p.id_profil === profileId);
+        const role = (userProfile?.nom || '').toLowerCase();
+
+        // Les profils direction/controle voient tout, les autres sont limites a leur agence/pole
+        if (!['direction', 'controle', 'contrôle'].some((r) => role.includes(r))) {
+            const userAgence = currentUser.value?.agence;
+            const userPoleId = currentUser.value?.id_pole || currentUser.value?.pole_id || currentUser.value?.pole?.id_pole;
+
+            if (userAgence || userPoleId) {
+                data = data.filter((p: any) => {
+                    const matchAgence = userAgence && p.agence === userAgence;
+                    const productPoleId = p.id_pole || p.pole_id || p.pole?.id_pole;
+                    const matchPole = userPoleId && productPoleId === userPoleId;
+                    return matchAgence || matchPole;
+                });
+            }
+        }
+
+        products.value = data;
     } catch (error) {
         console.error("Erreur chargement produits", error);
     }
@@ -411,6 +432,34 @@ const submitReject = async () => {
     }
 };
 
+const canDeleteOwnRequest = (item: Demande) => {
+    const isOwner = item.id_users === currentUser.value?.id_users;
+    const status = (item.statut || '').toUpperCase();
+    const isUntreated = !['VALIDEE', 'REFUSEE'].includes(status);
+    return isOwner && isUntreated;
+};
+
+const deleteOwnRequest = async (item: Demande) => {
+    if (!canDeleteOwnRequest(item)) return;
+    const confirmed = window.confirm('Supprimer cette demande ?');
+    if (!confirmed) return;
+
+    loading.value = true;
+    try {
+        await axiosInstance.delete(`/demandes/${item.id_demande}`);
+        toast.success('Demande supprimée.');
+        if (viewRequest.value?.id_demande === item.id_demande) {
+            isViewDialogOpen.value = false;
+        }
+        await fetchRequests();
+    } catch (error) {
+        console.error(error);
+        toast.error('Erreur lors de la suppression de la demande.');
+    } finally {
+        loading.value = false;
+    }
+};
+
 const getImageUrl = (path: string | null) => {
     if (!path) return '';
     if (path.startsWith('http') || path.startsWith('data:')) return path;
@@ -561,6 +610,17 @@ onMounted(async () => {
                             <td class="text-right">
                                 <v-btn icon variant="text" color="info" size="small" title="Voir détails" @click="openViewDialog(item)">
                                     <EyeIcon size="20" />
+                                </v-btn>
+                                <v-btn
+                                    v-if="canDeleteOwnRequest(item)"
+                                    icon
+                                    variant="text"
+                                    color="error"
+                                    size="small"
+                                    title="Supprimer"
+                                    @click="deleteOwnRequest(item)"
+                                >
+                                    <TrashIcon size="20" />
                                 </v-btn>
                                 <template
                                     v-if="!['VALIDEE', 'REFUSEE'].includes(item.statut?.toUpperCase())">

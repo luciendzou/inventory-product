@@ -9,6 +9,7 @@ import VueTablerIcons from 'vue-tabler-icons';
 import { i18n } from './i18n';
 
 import Toast from 'vue-toastification';
+import { bootstrapRealtimeFromSession } from './utils/realtimeNotifications';
 
 // Import the CSS for the toast notifications
 import 'vue-toastification/dist/index.css';
@@ -30,4 +31,5 @@ app.use(Toast, {
     maxToasts: 5,
     newestOnTop: true
 });
+bootstrapRealtimeFromSession();
 app.use(vuetify).mount('#app');

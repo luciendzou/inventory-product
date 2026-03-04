@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import { UserIcon, LockIcon } from 'vue-tabler-icons';
 import axiosInstance from '@/utils/axios';
 import { useToast } from 'vue-toastification';
+import { stopRealtimeNotifications } from '@/utils/realtimeNotifications';
 
 const router = useRouter();
 const toast = useToast();
@@ -14,6 +15,8 @@ const logout = async () => {
         
         // Nettoyage du stockage local
         localStorage.removeItem('authToken');
+        localStorage.removeItem('authUserId');
+        stopRealtimeNotifications();
         
         toast.success('Déconnexion réussie');
         router.push('/auth/login');
@@ -21,6 +24,8 @@ const logout = async () => {
         console.error("Erreur lors de la déconnexion", error);
         // Forcer la déconnexion locale même si l'API échoue (ex: token expiré)
         localStorage.removeItem('authToken');
+        localStorage.removeItem('authUserId');
+        stopRealtimeNotifications();
         router.push('/auth/login');
     }
 };
