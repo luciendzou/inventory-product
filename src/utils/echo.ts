@@ -21,19 +21,14 @@ export const initEcho = (token: string) => {
     (window as any).Pusher = Pusher;
 
     const appKey = import.meta.env.VITE_PUSHER_APP_KEY;
-    const configuredHost = import.meta.env.VITE_PUSHER_HOST;
-    const host = configuredHost || new URL(getApiBaseUrl()).hostname;
+    const configuredHost = (import.meta.env.VITE_PUSHER_HOST || '').trim();
     const port = Number(import.meta.env.VITE_PUSHER_PORT || 443);
     const scheme = (import.meta.env.VITE_PUSHER_SCHEME || 'https').toLowerCase();
-    const cluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'mt1';
+    const cluster = (import.meta.env.VITE_PUSHER_APP_CLUSTER || 'mt1').trim();
 
-    echoInstance = new Echo({
+    const options: any = {
         broadcaster: 'pusher',
         key: appKey,
-        cluster,
-        wsHost: host,
-        wsPort: port,
-        wssPort: port,
         forceTLS: scheme === 'https',
         enabledTransports: ['ws', 'wss'],
         authEndpoint: `${getApiBaseUrl()}/broadcasting/auth`,
@@ -43,7 +38,20 @@ export const initEcho = (token: string) => {
                 Accept: 'application/json'
             }
         }
-    });
+    };
+
+    // Pusher Cloud: cluster obligatoire, pas de wsHost custom.
+    // Soketi / host custom: wsHost/wsPort, cluster facultatif.
+    if (configuredHost) {
+        options.wsHost = configuredHost;
+        options.wsPort = port;
+        options.wssPort = port;
+        if (cluster) options.cluster = cluster;
+    } else if (cluster) {
+        options.cluster = cluster;
+    }
+
+    echoInstance = new Echo(options);
 
     echoToken = token;
     return echoInstance;
